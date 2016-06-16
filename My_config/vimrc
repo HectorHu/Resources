@@ -1,77 +1,410 @@
-" VIM Configuration File
-" Description: Optimized for C/C++ development, but useful also for other things.
-" Author: Gerhard Gappmeier
-"
- 
-" set UTF-8 encoding
-set enc=utf-8
-set fenc=utf-8
-set termencoding=utf-8
-" disable vi compatibility (emulation of old bugs)
+set runtimepath=$VIMRUNTIME
+
 set nocompatible
-" use indentation of previous line
-set autoindent
-" use intelligent indentation for C
-set smartindent
-" configure tabwidth and insert spaces instead of tabs
-set tabstop=4        " tab width is 4 spaces
-set shiftwidth=4     " indent also with 4 spaces
-set expandtab        " expand tabs to spaces
-" wrap lines at 120 chars. 80 is somewaht antiquated with nowadays displays.
-set textwidth=120
-" turn syntax highlighting on
-set t_Co=256
-syntax on
-" colorscheme wombat256
-" turn line numbers on
-set number
-" highlight matching braces
-set showmatch
-" intelligent comments
-set comments=sl:/*,mb:\ *,elx:\ */
- 
-" Install OmniCppComplete like described on http://vim.wikia.com/wiki/C++_code_completion
-" This offers intelligent C++ completion when typing ‘.’ ‘->’ or <C-o>
-" Load standard tag files
-set tags+=~/.vim/tags/cpp
-set tags+=~/.vim/tags/gl
-set tags+=~/.vim/tags/sdl
-set tags+=~/.vim/tags/qt4
- 
-" Install DoxygenToolkit from http://www.vim.org/scripts/script.php?script_id=987
-let g:DoxygenToolkit_authorName="John Doe <john@doe.com>"
- 
-" Enhanced keyboard mappings
-"
-" in normal mode F2 will save the file
-nmap <F2> :w<CR>
-" in insert mode F2 will exit insert, save, enters insert again
-imap <F2> <ESC>:w<CR>i
-" switch between header/source with F4
-map <F4> :e %:p:s,.h$,.X123X,:s,.cpp$,.h,:s,.X123X$,.cpp,<CR>
-" recreate tags file with F5
-map <F5> :!ctags -R –c++-kinds=+p –fields=+iaS –extra=+q .<CR>
-" create doxygen comment
-map <F6> :Dox<CR>
-" build using makeprg with <F7>
-map <F7> :make<CR>
-" build using makeprg with <S-F7>
-map <S-F7> :make clean all<CR>
-" goto definition with F12
-map <F12> <C-]>
-" in diff mode we use the spell check keys for merging
-if &diff
-  ” diff settings
-  map <M-Down> ]c
-  map <M-Up> [c
-  map <M-Left> do
-  map <M-Right> dp
-  map <F9> :new<CR>:read !svn diff<CR>:set syntax=diff buftype=nofile<CR>gg
+filetype off
+
+set rtp+=~/.vim/bundle/Vundle.vim
+call vundle#begin()
+
+Plugin 'tomasr/molokai'
+Plugin 'majutsushi/tagbar'
+Plugin 'gmarik/Vundle.vim'
+Plugin 'Valloric/YouCompleteMe'
+Plugin 'scrooloose/syntastic'
+Plugin 'scrooloose/nerdtree' | Plugin 'jistr/vim-nerdtree-tabs'
+Plugin 'Chiel92/vim-autoformat'
+Plugin 'junegunn/vim-easy-align'
+Plugin 'ntpeters/vim-better-whitespace'
+Plugin 'tpope/vim-dispatch'
+
+if has('mac') || has('macunix')
+	Plugin 'rizzatti/dash.vim'
 else
-  " spell settings
-  :setlocal spell spelllang=en
-  " set the spellfile - folders must exist
-  set spellfile=~/.vim/spellfile.add
-  map <M-Down> ]s
-  map <M-Up> [s
+	Plugin 'KabbAmine/zeavim.vim'
 endif
+
+call vundle#end()
+filetype plugin indent on
+
+set number
+
+" Map ; to : and save a million keystrokes 用于快速进入命令行
+nnoremap ; :
+
+" close direction key
+map <Left>  <Nop>
+map <Right> <Nop>
+map <Up>    <Nop>
+map <Down>  <Nop>
+
+" Show the cursor position all the time
+set ruler
+
+set cursorline
+
+" Indent at the same level of the previous line
+set autoindent
+
+" Make "tab" insert indents instead of tabs at the beginning of a line
+set smarttab
+
+" Size of a hard tabstop
+set tabstop=8
+set softtabstop=8
+
+" Size of an "indent"
+set shiftwidth=8
+
+" Never use space to replace tab
+set noexpandtab
+
+" Show tab and eof
+set list listchars=tab:▸\ ,eol:¬,trail:⋅
+"
+" Restore cursor to previous editing position
+autocmd BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | execute "normal! g'\"" | endif
+"
+" FileType {
+autocmd FileType python,markdown setlocal expandtab tabstop=4 shiftwidth=4 softtabstop=4
+autocmd FileType javascript,json,ruby setlocal expandtab tabstop=2 shiftwidth=2 softtabstop=2
+autocmd FileType php set matchpairs-=<:>
+" Wait to redraw
+autocmd FileType go set lazyredraw
+
+autocmd BufNewFile *.sh,*.py call AutoInsertFileHead()
+function! AutoInsertFileHead()
+	" Shell
+	if &filetype ==# 'sh'
+		call setline(1, '#!/bin/sh')
+	endif
+	" Python
+	if &filetype ==# 'python'
+		call setline(1, '#!/usr/bin/env python')
+		call append(1, '#-*- coding: utf-8 -*-')
+	endif
+
+	normal G
+	normal o
+	normal o
+endfunc
+"}
+
+" Docset {
+autocmd FileType ref-man,ref-pydoc,ref-pman,help,godoc set nolist
+"
+function! GetCurrentWord()
+	return expand('<cword>')
+endfunction
+
+" Use man as docset for unrecognized filetype
+autocmd BufNewFile,BufRead * if empty(&filetype) | call SetUnrecognizedFileTypeReferences() | endif
+function! SetUnrecognizedFileTypeReferences()
+	nnoremap <buffer><silent><S-k> :execute 'Ref man' GetCurrentWord()<CR>
+	vnoremap <buffer><silent><S-k> <ESC>:execute 'Ref man' GetVisualSelection()<CR>
+endfunction
+
+autocmd FileType * call SetReferences()
+function! SetReferences()
+	let filetype_references = {
+				\   'c': 'Ref man',
+				\   'cpp': 'Ref man',
+				\   'sh': 'Ref man',
+				\   'go': 'GoDoc',
+				\   'python': 'Ref pydoc',
+				\   'ruby': 'Ref ri',
+				\   'php': 'Ref pman',
+				\   'vim': 'help',
+				\ }
+	let is_reference_set = 0
+	for [ftype, reference] in items(filetype_references)
+		if &filetype != ftype
+			continue
+		endif
+
+		" vim-go has do it for you
+		if ftype != 'go'
+			let search = expand('<cword>')
+			execute 'nnoremap <buffer><silent><S-k> :execute "' . reference . '" GetCurrentWord()<CR>'
+		endif
+		" Enable reference in visual-mode
+		execute 'vnoremap <buffer><silent><S-k> <ESC>:execute "' . reference . '" GetVisualSelection()<CR>'
+
+		let is_reference_set = 1
+	endfor
+
+	if !is_reference_set
+		" Default reference: dash or zeal
+		if has('mac') || has('macunix')
+			" vim-lua-ftplugin has do it for you
+			if &filetype != 'lua'
+				nnoremap <buffer><silent><S-k> :execute 'Dash' GetCurrentWord()<CR>
+			endif
+			vnoremap <buffer><silent><S-k> <ESC>:execute 'Dash' GetVisualSelection()<CR>
+		else
+			" vim-lua-ftplugin has do it for you
+			if &filetype != 'lua'
+				nnoremap <buffer><silent><S-k> :Zeavim<CR>
+			endif
+
+			vnoremap <buffer><silent><S-k> <ESC>:ZvV<CR>
+		endif
+	endif
+endfunction
+" }
+
+function! IsLocationListBuffer()
+	if &ft != 'qf'
+		return 0
+	endif
+
+	silent let buffer_list = GetBufferListOutputAsOneString()
+
+	let l:quickfix_match = matchlist(buffer_list,
+				\ '\n\s*\(\d\+\)[^\n]*Quickfix List')
+	if empty(l:quickfix_match)
+		return 1
+	endif
+	let quickfix_bufnr = l:quickfix_match[1]
+	return quickfix_bufnr == bufnr('%') ? 0 : 1
+endfunction
+
+" Use both Unix, DOS and Mac file formats, but favor the Unix one for new files
+set fileformats=unix,dos,mac
+
+nnoremap <silent> q :call CloseWindow()<CR>
+
+function! CloseWindow()
+	if tabpagenr('$') > 1
+		quit
+		return
+	endif
+
+	let last_winnr = winnr('$')
+	if last_winnr == 1 || last_winnr > 3
+		quit
+		return
+	endif
+
+	if last_winnr == 2 && (!exists('g:NERDTree') || !g:NERDTree.IsOpen())
+		quit
+		return
+	endif
+
+	if last_winnr == 3
+		if !exists('g:NERDTree') || !g:NERDTree.IsOpen()
+			quit
+			return
+		endif
+
+		let tagbar_winnr = bufwinnr('__Tagbar__')
+		if tagbar_winnr < 0
+			quit
+			return
+		endif
+	endif
+
+	" If NERDTreeTabs is opend, only call quitall can save the session
+	quitall
+endfunction
+" }
+
+" Tab {
+nnoremap <silent><Leader>t :execute 'tabnew' Prompt('New tab name: ', expand('%'), 'file')<CR>
+nnoremap <silent><S-h> :tabprevious<CR>
+nnoremap <silent><S-l> :tabnext<CR>
+nnoremap <Leader>1 1gt
+nnoremap <Leader>2 2gt
+nnoremap <Leader>3 3gt
+nnoremap <Leader>4 4gt
+nnoremap <Leader>5 5gt
+nnoremap <Leader>6 6gt
+nnoremap <Leader>7 7gt
+nnoremap <Leader>8 8gt
+nnoremap <Leader>9 9gt
+nnoremap <silent><Leader>[ :tabfirst<CR>
+nnoremap <silent><Leader>] :tablast<CR>
+" }
+
+" Split {
+nnoremap <C-j> <C-w>j
+nnoremap <C-k> <C-w>k
+nnoremap <C-h> <C-w>h
+nnoremap <C-l> <C-w>l
+nnoremap <silent><Leader>s :execute 'new' Prompt('New split name: ', expand('%'), 'file')<CR>
+nnoremap <silent><Leader>v :execute 'vnew' Prompt('New vsplit name: ', expand('%'), 'file')<CR>
+
+nnoremap <C-up> <C-w>+
+nnoremap <C-down> <C-w>-
+nnoremap <C-left> <C-w>>
+nnoremap <C-right> <C-w><
+" }
+
+" F2 ~ F10 {
+nnoremap <silent><F2> :NERDTreeTabsToggle<CR>
+nnoremap <silent><F3> :TagbarToggle<CR>
+nnoremap <silent><F4> :GundoToggle<CR>
+nnoremap <silent><F7> :Dispatch!<CR>
+nnoremap <silent><F8> :call DispatchQListToggle()<CR>
+nnoremap <silent><F9> :InstantMarkdownPreview<CR>
+
+set pastetoggle=<F5>
+
+" Disbale paste mode when leaving insert mode
+autocmd InsertLeave * set nopaste
+" }
+
+function! Strip(input_string)
+	return substitute(a:input_string, '^\s*\(.\{-}\)\s*$', '\1', '')
+endfunction
+
+" Prompt({prompt_text} [, {default_value} [, {completion_type}]])
+" " More completion_type, please refer :h command-completion
+function! Prompt(prompt_text, ...)
+	call inputsave()
+	let value = ''
+	if a:0 == 0
+		let value = input(a:prompt_text)
+	elseif a:0 == 1
+		let value = input(a:prompt_text, a:1)
+	else
+		let value = input(a:prompt_text, a:1, a:2)
+	endif
+	call inputrestore()
+	return Strip(value)
+endfunction
+
+function! DispatchQListToggle()
+	let buffer_count_before = BufferCount()
+	silent! cclose
+
+	if BufferCount() == buffer_count_before
+		Copen!
+	endif
+endfunction
+
+function! BufferCount()
+	return len(filter(range(1, bufnr('$')), 'buflisted(v:val)'))
+endfunction
+
+" NERDTree {
+" Set NERDTree window width
+let NERDTreeWinSize = 32
+let g:NERDTreeAutoDeleteBuffer = 1
+
+" Show hidden
+let NERDTreeShowHidden = 1
+" Ignore files
+let NERDTreeIgnore=['\.o$', '\.obj$', '\.so$', '\.dll$', '\.exe$', '\.py[co]$', '\~$', '\.swo$', '\.swp$', '^\.git$', '^\.hg$', '^\.svn$', '\.bzr$']
+
+" Don't open NERDTreeTabs automatically when vim starts up
+let g:nerdtree_tabs_open_on_gui_startup = 0
+let g:nerdtree_tabs_open_on_console_startup = 0
+
+" Close vim if the only window left open is a NERDTreeTabs
+let g:nerdtree_tabs_autoclose = 1
+
+" }
+
+" vim-easy-align {
+" Start interactive EasyAlign in visual mode (e.g. vipga)
+xmap ga <Plug>(EasyAlign)
+" Start interactive EasyAlign for a motion/text object (e.g. gaip)
+nmap ga <Plug>(EasyAlign)
+" }
+
+" vim-better-whitespace {
+let g:better_whitespace_filetypes_blacklist = []
+
+nnoremap <silent><Leader><Space> :StripWhitespace<CR>
+" }
+
+" YouCompleteMe {
+if !empty(glob('~/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp/ycm/.ycm_extra_conf.py'))
+	let g:ycm_global_ycm_extra_conf = '~/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp/ycm/.ycm_extra_conf.py'
+endif
+
+" Do not use syntastic to check C, C++ and Objective-C, do it by syntastic
+let g:ycm_show_diagnostics_ui = 0
+let g:ycm_complete_in_comments = 1
+let g:ycm_complete_in_strings = 1
+let g:ycm_use_ultisnips_completer = 1
+let g:ycm_collect_identifiers_from_comments_and_strings = 1
+let g:ycm_collect_identifiers_from_tags_files = 1
+let g:ycm_seed_identifiers_with_syntax = 1
+let g:ycm_autoclose_preview_window_after_insertion = 1
+let g:ycm_goto_buffer_command = 'same-buffer'
+let g:ycm_filepath_completion_use_working_dir = 1
+
+" Use Ctrl-o to jump back, see :help jumplist
+nnoremap <silent>gd :YcmCompleter GoToDefinition<CR>
+nnoremap <silent><Leader>jd :YcmCompleter GoToDeclaration<CR>
+nnoremap <silent><Leader>ji :YcmCompleter GoToInclude<CR>
+" }
+
+" Syntastic {
+let g:syntastic_loc_list_height = 10
+let g:syntastic_error_symbol = '✖'
+let g:syntastic_style_error_symbol = '✖'
+let g:syntastic_warning_symbol = '!'
+let g:syntastic_style_warning_symbol = '!'
+let g:syntastic_always_populate_loc_list = 0
+let g:syntastic_auto_loc_list = 2
+let g:syntastic_check_on_open = 1
+let g:syntastic_check_on_wq = 0
+let g:syntastic_enable_highlighting = 1
+" let g:syntastic_go_checkers = ['golint', 'govet', 'errcheck']
+" let g:syntastic_mode_map = {'mode': 'active', 'passive_filetypes': ['go']}
+
+function! ToggleErrors()
+	let old_last_winnr = winnr('$')
+	lclose
+	if old_last_winnr == winnr('$')
+		" Nothing was closed, open syntastic_error location panel
+		Errors
+	endif
+endfunction
+
+nnoremap <silent><Leader>e :call ToggleErrors()<CR>
+" }
+
+
+" vim-autoformat {
+" Execute Autoformat onsave
+autocmd FileType c,cpp,go,java,javascript,json,python,lua,ruby,php,markdown,sh,vim autocmd BufWrite <buffer> :Autoformat
+
+" Enable autoindent
+let g:autoformat_autoindent = 1
+
+" Enable auto retab
+let g:autoformat_retab = 1
+
+" Enable auto remove trailing spaces
+let g:autoformat_remove_trailing_spaces = 1
+
+" Generic C, C++, Objective-C style
+" A style similar to the Linux Kernel Coding Style
+" linux Kernel Coding Style: https://www.kernel.org/doc/Documentation/CodingStyle
+let g:formatdef_clangformat = "'clang-format -style=\"{BasedOnStyle: LLVM, IndentWidth: 8, UseTab: Always, BreakBeforeBraces: Linux, AllowShortIfStatementsOnASingleLine: false, IndentCaseLabels: false}\"'"
+
+" Golang
+let g:formatters_go = ['goimports']
+
+" Python
+let g:formatter_yapf_style = 'pep8'
+let g:formatters_python = ['yapf']
+
+" Markdown
+let g:formatdef_remark_markdown = "\"remark --silent --no-color --setting 'fences: true, listItemIndent: \\\"1\\\"'\""
+" }
+
+" molokai {
+" Should before colorscheme
+syntax on
+
+" Should before colorscheme, too
+let g:molokai_original = 1
+let g:rehash256 = 1
+
+colorscheme molokai
+" }
+
