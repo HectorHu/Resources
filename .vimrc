@@ -148,7 +148,41 @@ function! CloseWindow()
 endfunction
 " }
 
+" Split {
+nnoremap <C-j> <C-w>j
+nnoremap <C-k> <C-w>k
+nnoremap <C-h> <C-w>h
+nnoremap <C-l> <C-w>l
+nnoremap <silent><Leader>s :execute 'new' Prompt('New split name: ', expand('%'), 'file')<CR>
+nnoremap <silent><Leader>v :execute 'vnew' Prompt('New vsplit name: ', expand('%'), 'file')<CR>
+
+nnoremap <C-up> <C-w>+
+nnoremap <C-down> <C-w>-
+nnoremap <C-left> <C-w>>
+nnoremap <C-right> <C-w><
+" }
+
 nnoremap <silent><F2> :NERDTreeTabsToggle<CR>
+
+function! Strip(input_string)
+	return substitute(a:input_string, '^\s*\(.\{-}\)\s*$', '\1', '')
+endfunction
+
+" Prompt({prompt_text} [, {default_value} [, {completion_type}]])
+" More completion_type, please refer :h command-completion
+function! Prompt(prompt_text, ...)
+	call inputsave()
+	let value = ''
+	if a:0 == 0
+		let value = input(a:prompt_text)
+	elseif a:0 == 1
+		let value = input(a:prompt_text, a:1)
+	else
+		let value = input(a:prompt_text, a:1, a:2)
+	endif
+	call inputrestore()
+	return Strip(value)
+endfunction
 
 " NERDTree {
 let g:NERDTreeAutoDeleteBuffer = 1
