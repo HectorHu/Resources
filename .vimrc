@@ -23,10 +23,16 @@ Plugin 'scrooloose/syntastic'
 " 目录树
 Plugin 'scrooloose/nerdtree' | Plugin 'jistr/vim-nerdtree-tabs'
 
+" 自动格式化代码
+Plugin 'Chiel92/vim-autoformat'
+
 call vundle#end()
 
 " 用于快速进入命令行
 nnoremap ; :
+
+" 打开文件类型检测
+filetype plugin indent on
 
 " Leader {
 let mapleader = ','
@@ -81,6 +87,27 @@ function! ToggleErrors()
 	endif
 endfunction
 nnoremap <silent><Leader>e :call ToggleErrors()<CR>
+" }
+
+" vim-autoformat {
+" Execute Autoformat onsave
+autocmd FileType c,go,java,javascript,json,python,lua,php,markdown,sh,vim autocmd BufWrite <buffer> :Autoformat
+" Enable autoindent
+let g:autoformat_autoindent = 1
+
+" Enable auto retab
+let g:autoformat_retab = 1
+
+" Enable auto remove trailing spaces
+let g:autoformat_remove_trailing_spaces = 1
+
+" Generic C, C++, Objective-C style
+" A style similar to the Linux Kernel Coding Style
+" linux Kernel Coding Style: https://www.kernel.org/doc/Documentation/CodingStyle
+let g:formatdef_clangformat = "'clang-format -style=\"{BasedOnStyle: LLVM, IndentWidth: 8, UseTab: Always, BreakBeforeBraces: Linux, AllowShortIfStatementsOnASingleLine: false, IndentCaseLabels: false}\"'"
+
+" Markdown
+let g:formatdef_remark_markdown = "\"remark --silent --no-color --setting 'fences: true, listItemIndent: \\\"1\\\"'\""
 " }
 
 " 按q退出vim
