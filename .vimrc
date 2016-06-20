@@ -26,10 +26,25 @@ Plugin 'scrooloose/nerdtree' | Plugin 'jistr/vim-nerdtree-tabs'
 " 自动格式化代码
 Plugin 'Chiel92/vim-autoformat'
 
+" 对齐
+Plugin 'junegunn/vim-easy-align'
+
+" tab
+Plugin 'majutsushi/tagbar'
+
 call vundle#end()
 
 " 用于快速进入命令行
 nnoremap ; :
+
+" 关闭方向键
+map <Left>  <Nop>
+map <Right> <Nop>
+map <Up>    <Nop>
+map <Down>  <Nop>
+
+" 设置行数
+set number
 
 " 打开文件类型检测
 filetype plugin indent on
@@ -37,6 +52,9 @@ filetype plugin indent on
 " Leader {
 let mapleader = ','
 " }
+
+" PHP file check
+autocmd FileType php set matchpairs-=<:>
 
 " molokai {
 " Should before colorscheme
@@ -52,7 +70,7 @@ colorscheme molokai
 
 " YouCompleteMe {
 if !empty(glob('~/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp/ycm/.ycm_extra_conf.py'))
-	let g:ycm_global_ycm_extra_conf = '~/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp/ycm/.ycm_extra_conf.py'
+        let g:ycm_global_ycm_extra_conf = '~/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp/ycm/.ycm_extra_conf.py'
 endif
 
 " Do not use YouCompleteMe to check C, C++ and Objective-C, do it by syntastic
@@ -79,12 +97,12 @@ let g:syntastic_check_on_open = 1
 let g:syntastic_check_on_wq = 0
 
 function! ToggleErrors()
-	let old_last_winnr = winnr('$')
-	lclose
-	if old_last_winnr == winnr('$')
-		" Nothing was closed, open syntastic error location panel
-		Errors
-	endif
+        let old_last_winnr = winnr('$')
+        lclose
+        if old_last_winnr == winnr('$')
+                " Nothing was closed, open syntastic error location panel
+                Errors
+        endif
 endfunction
 nnoremap <silent><Leader>e :call ToggleErrors()<CR>
 " }
@@ -114,38 +132,55 @@ let g:formatdef_remark_markdown = "\"remark --silent --no-color --setting 'fence
 nnoremap <silent> q :call CloseWindow()<CR>
 
 function! CloseWindow()
-	if tabpagenr('$') > 1
-		quit
-		return
-	endif
+        if tabpagenr('$') > 1
+                quit
+                return
+        endif
 
-	let last_winnr = winnr('$')
-	if last_winnr == 1 || last_winnr > 3
-		quit
-		return
-	endif
+        let last_winnr = winnr('$')
+        if last_winnr == 1 || last_winnr > 3
+                quit
+                return
+        endif
 
-	if last_winnr == 2 && (!exists('g:NERDTree') || !g:NERDTree.IsOpen())
-		quit
-		return
-	endif
+        if last_winnr == 2 && (!exists('g:NERDTree') || !g:NERDTree.IsOpen())
+                quit
+                return
+        endif
 
-	if last_winnr == 3
-		if !exists('g:NERDTree') || !g:NERDTree.IsOpen()
-			quit
-			return
-		endif
+        if last_winnr == 3
+                if !exists('g:NERDTree') || !g:NERDTree.IsOpen()
+                        quit
+                        return
+                endif
 
-		let tagbar_winnr = bufwinnr('__Tagbar__')
-		if tagbar_winnr < 0
-			quit
-			return
-		endif
-	endif
+                let tagbar_winnr = bufwinnr('__Tagbar__')
+                if tagbar_winnr < 0
+                        quit
+                        return
+                endif
+        endif
 
-	" If NERDTreeTabs is opend, only call quitall can save the session
-	quitall
+        " If NERDTreeTabs is opend, only call quitall can save the session
+        quitall
 endfunction
+" }
+
+" Tab {
+nnoremap <silent><Leader>t :execute 'tabnew' Prompt('New tab name: ', '', 'file')<CR>
+nnoremap <silent><S-h> :tabprevious<CR>
+nnoremap <silent><S-l> :tabnext<CR>
+nnoremap <Leader>1 1gt
+nnoremap <Leader>2 2gt
+nnoremap <Leader>3 3gt
+nnoremap <Leader>4 4gt
+nnoremap <Leader>5 5gt
+nnoremap <Leader>6 6gt
+nnoremap <Leader>7 7gt
+nnoremap <Leader>8 8gt
+nnoremap <Leader>9 9gt
+nnoremap <Leader>[ :tabfirst<CR>
+nnoremap <Leader>] :tablast<CR>
 " }
 
 " Split {
@@ -165,23 +200,23 @@ nnoremap <C-right> <C-w><
 nnoremap <silent><F2> :NERDTreeTabsToggle<CR>
 
 function! Strip(input_string)
-	return substitute(a:input_string, '^\s*\(.\{-}\)\s*$', '\1', '')
+        return substitute(a:input_string, '^\s*\(.\{-}\)\s*$', '\1', '')
 endfunction
 
 " Prompt({prompt_text} [, {default_value} [, {completion_type}]])
 " More completion_type, please refer :h command-completion
 function! Prompt(prompt_text, ...)
-	call inputsave()
-	let value = ''
-	if a:0 == 0
-		let value = input(a:prompt_text)
-	elseif a:0 == 1
-		let value = input(a:prompt_text, a:1)
-	else
-		let value = input(a:prompt_text, a:1, a:2)
-	endif
-	call inputrestore()
-	return Strip(value)
+        call inputsave()
+        let value = ''
+        if a:0 == 0
+                let value = input(a:prompt_text)
+        elseif a:0 == 1
+                let value = input(a:prompt_text, a:1)
+        else
+                let value = input(a:prompt_text, a:1, a:2)
+        endif
+        call inputrestore()
+        return Strip(value)
 endfunction
 
 " NERDTree {
@@ -201,3 +236,9 @@ let g:nerdtree_tabs_autoclose = 1
 
 " }
 
+" vim-easy-align {
+" Start interactive EasyAlign in visual mode (e.g. vipga)
+xmap ga <Plug>(EasyAlign)
+" Start interactive EasyAlign for a motion/text object (e.g. gaip)
+nmap ga <Plug>(EasyAlign)
+" }
