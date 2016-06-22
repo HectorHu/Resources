@@ -32,6 +32,8 @@ Plugin 'junegunn/vim-easy-align'
 " tab
 Plugin 'majutsushi/tagbar'
 
+Plugin 'tpope/vim-eunuch'
+
 call vundle#end()
 
 " 用于快速进入命令行
@@ -45,6 +47,9 @@ map <Down>  <Nop>
 
 " 设置行数
 set number
+
+" sudo save
+cnoreabbrev W SudoWrite
 
 " 打开文件类型检测
 filetype plugin indent on
