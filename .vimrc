@@ -58,6 +58,23 @@ filetype plugin indent on
 let mapleader = ','
 " }
 
+if has('unnamedplus')
+	" When possible use + register for copy-paste
+	set clipboard=unnamed,unnamedplus
+else
+	" On Mac and Windows, use * register for copy-paste
+	set clipboard=unnamed
+endif
+
+set autoindent
+
+set smarttab
+
+set tabstop=8
+set softtabstop=8
+
+set noexpandtab
+
 " PHP file check
 autocmd FileType php set matchpairs-=<:>
 
@@ -75,7 +92,7 @@ colorscheme molokai
 
 " YouCompleteMe {
 if !empty(glob('~/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp/ycm/.ycm_extra_conf.py'))
-        let g:ycm_global_ycm_extra_conf = '~/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp/ycm/.ycm_extra_conf.py'
+	let g:ycm_global_ycm_extra_conf = '~/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp/ycm/.ycm_extra_conf.py'
 endif
 
 " Do not use YouCompleteMe to check C, C++ and Objective-C, do it by syntastic
@@ -102,12 +119,12 @@ let g:syntastic_check_on_open = 1
 let g:syntastic_check_on_wq = 0
 
 function! ToggleErrors()
-        let old_last_winnr = winnr('$')
-        lclose
-        if old_last_winnr == winnr('$')
-                " Nothing was closed, open syntastic error location panel
-                Errors
-        endif
+	let old_last_winnr = winnr('$')
+	lclose
+	if old_last_winnr == winnr('$')
+		" Nothing was closed, open syntastic error location panel
+		Errors
+	endif
 endfunction
 nnoremap <silent><Leader>e :call ToggleErrors()<CR>
 " }
@@ -137,37 +154,37 @@ let g:formatdef_remark_markdown = "\"remark --silent --no-color --setting 'fence
 nnoremap <silent> q :call CloseWindow()<CR>
 
 function! CloseWindow()
-        if tabpagenr('$') > 1
-                quit
-                return
-        endif
+	if tabpagenr('$') > 1
+		quit
+		return
+	endif
 
-        let last_winnr = winnr('$')
-        if last_winnr == 1 || last_winnr > 3
-                quit
-                return
-        endif
+	let last_winnr = winnr('$')
+	if last_winnr == 1 || last_winnr > 3
+		quit
+		return
+	endif
 
-        if last_winnr == 2 && (!exists('g:NERDTree') || !g:NERDTree.IsOpen())
-                quit
-                return
-        endif
+	if last_winnr == 2 && (!exists('g:NERDTree') || !g:NERDTree.IsOpen())
+		quit
+		return
+	endif
 
-        if last_winnr == 3
-                if !exists('g:NERDTree') || !g:NERDTree.IsOpen()
-                        quit
-                        return
-                endif
+	if last_winnr == 3
+		if !exists('g:NERDTree') || !g:NERDTree.IsOpen()
+			quit
+			return
+		endif
 
-                let tagbar_winnr = bufwinnr('__Tagbar__')
-                if tagbar_winnr < 0
-                        quit
-                        return
-                endif
-        endif
+		let tagbar_winnr = bufwinnr('__Tagbar__')
+		if tagbar_winnr < 0
+			quit
+			return
+		endif
+	endif
 
-        " If NERDTreeTabs is opend, only call quitall can save the session
-        quitall
+	" If NERDTreeTabs is opend, only call quitall can save the session
+	quitall
 endfunction
 " }
 
@@ -205,23 +222,23 @@ nnoremap <C-right> <C-w><
 nnoremap <silent><F2> :NERDTreeTabsToggle<CR>
 
 function! Strip(input_string)
-        return substitute(a:input_string, '^\s*\(.\{-}\)\s*$', '\1', '')
+	return substitute(a:input_string, '^\s*\(.\{-}\)\s*$', '\1', '')
 endfunction
 
 " Prompt({prompt_text} [, {default_value} [, {completion_type}]])
 " More completion_type, please refer :h command-completion
 function! Prompt(prompt_text, ...)
-        call inputsave()
-        let value = ''
-        if a:0 == 0
-                let value = input(a:prompt_text)
-        elseif a:0 == 1
-                let value = input(a:prompt_text, a:1)
-        else
-                let value = input(a:prompt_text, a:1, a:2)
-        endif
-        call inputrestore()
-        return Strip(value)
+	call inputsave()
+	let value = ''
+	if a:0 == 0
+		let value = input(a:prompt_text)
+	elseif a:0 == 1
+		let value = input(a:prompt_text, a:1)
+	else
+		let value = input(a:prompt_text, a:1, a:2)
+	endif
+	call inputrestore()
+	return Strip(value)
 endfunction
 
 " NERDTree {
