@@ -34,6 +34,9 @@ Plugin 'majutsushi/tagbar'
 
 Plugin 'tpope/vim-eunuch'
 
+" 快速跳转
+Plugin 'Lokaltog/vim-easymotion'
+
 call vundle#end()
 
 " 用于快速进入命令行
@@ -264,3 +267,13 @@ xmap ga <Plug>(EasyAlign)
 " Start interactive EasyAlign for a motion/text object (e.g. gaip)
 nmap ga <Plug>(EasyAlign)
 " }
+
+" easymotion
+let g:EasyMotion_smartcase = 1
+"let g:EasyMotion_startofline = 0 " keep cursor colum when JK motion
+map <Leader><leader>h <Plug>(easymotion-linebackward)
+map <Leader><Leader>j <Plug>(easymotion-j)
+map <Leader><Leader>k <Plug>(easymotion-k)
+map <Leader><leader>l <Plug>(easymotion-lineforward)
+" 重复上一次操作, 类似repeat插件, 很强大
+map <Leader><leader>. <Plug>(easymotion-repeat)
