@@ -43,6 +43,12 @@ Plugin 'ctrlpvim/ctrlp.vim'
 " crtlp 辅助
 Plugin 'tacahiroy/ctrlp-funky'
 
+" 符号自动补全 全单引号，双引号, 括号等等
+Plugin 'Raimondi/delimitMate'
+
+" 快速注释
+Plugin 'scrooloose/nerdcommenter'
+
 call vundle#end()
 
 " 用于快速进入命令行
@@ -306,3 +312,7 @@ nnoremap <Leader>fU :execute 'CtrlPFunky ' . expand('<cword>')<Cr>
 let g:ctrlp_funky_syntax_highlight = 1
 
 let g:ctrlp_extensions = ['funky']
+
+" nerdcommenter
+" 注释的时候自动加个空格
+let g:NERDSpceDelims=1
