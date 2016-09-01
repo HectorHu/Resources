@@ -1,55 +1,64 @@
-set runtimepath=$VIMRUNTIME
+" set runtimepath=$VIMRUNTIME
 
 " VIM 不使用与VI兼容的模式
-set nocompatible
+" set nocompatible
 
 " 使用Vundle管理插件
-set rtp+=~/.vim/bundle/Vundle.vim
+" set rtp+=~/.vim/bundle/Vundle.vim
+if empty(glob($HOME . '/.vim/autoload/plug.vim'))
+	let path = '/.vim/autoload/plug.vim'
+	if has('win32') || has('win64')
+		let path = '\.vim\autoload\plug.vim'
+	endif
 
-call vundle#begin()
+	silent execute '!curl' '-fLo' $HOME . path '--create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
+	autocmd VimEnter * PlugInstall | source $MYVIMRC
+endif
+
+call plug#begin($HOME . '/.vim/bundle')
 
 " 代码颜色主题
-Plugin 'tomastr/molokai'
+Plug 'tomasr/molokai'
 
 " 代码补全工具
-Plugin 'Valloric/YouCompleteMe'
+Plug 'Valloric/YouCompleteMe'
 
 " 插件管理
-Plugin 'gmarik/Vundle.vim'
+Plug 'gmarik/Vundle.vim'
 
 " 使代码语法高亮
-Plugin 'scrooloose/syntastic'
+Plug 'scrooloose/syntastic'
 
 " 目录树
-Plugin 'scrooloose/nerdtree' | Plugin 'jistr/vim-nerdtree-tabs'
+Plug 'scrooloose/nerdtree' | Plug 'jistr/vim-nerdtree-tabs'
 
 " 自动格式化代码
-Plugin 'Chiel92/vim-autoformat'
+Plug 'Chiel92/vim-autoformat'
 
 " 对齐
-Plugin 'junegunn/vim-easy-align'
+Plug 'junegunn/vim-easy-align'
 
 " tab
-Plugin 'majutsushi/tagbar'
+Plug 'majutsushi/tagbar'
 
-Plugin 'tpope/vim-eunuch'
+Plug 'tpope/vim-eunuch'
 
 " 快速跳转
-Plugin 'Lokaltog/vim-easymotion'
+Plug 'Lokaltog/vim-easymotion'
 
 " 文件搜索
-Plugin 'ctrlpvim/ctrlp.vim'
+Plug 'ctrlpvim/ctrlp.vim'
 
 " crtlp 辅助
-Plugin 'tacahiroy/ctrlp-funky'
+Plug 'tacahiroy/ctrlp-funky'
 
 " 符号自动补全 全单引号，双引号, 括号等等
-Plugin 'Raimondi/delimitMate'
+Plug 'Raimondi/delimitMate'
 
 " 快速注释
-Plugin 'scrooloose/nerdcommenter'
+Plug 'scrooloose/nerdcommenter'
 
-call vundle#end()
+call plug#end()
 
 " 用于快速进入命令行
 nnoremap ; :
@@ -86,12 +95,22 @@ set autoindent
 set smarttab
 
 set tabstop=8
-set softtabstop=8
+autocmd FileType javascript set tabstop=2
 
+set softtabstop=8
+autocmd FileType javascript set softtabstop=2
+autocmd FileType javascript,html,css,xml set sw=2
+autocmd FileType javascript,html,css,xml set ts=2
+autocmd FileType javascript,html,css,xml set sts=2
 set noexpandtab
 
 " PHP file check
 autocmd FileType php set matchpairs-=<:>
+autocmd FileType php set softtabstop=4
+autocmd FileType php set sw=4
+autocmd FileType php set ts=4
+autocmd FileType php set sts=4
+
 
 " molokai {
 " Should before colorscheme
@@ -163,6 +182,7 @@ let g:formatdef_clangformat = "'clang-format -style=\"{BasedOnStyle: LLVM, Inden
 
 " Markdown
 let g:formatdef_remark_markdown = "\"remark --silent --no-color --setting 'fences: true, listItemIndent: \\\"1\\\"'\""
+
 " }
 
 " 按q退出vim
@@ -205,8 +225,8 @@ endfunction
 
 " Tab {
 nnoremap <silent><Leader>t :execute 'tabnew' Prompt('New tab name: ', '', 'file')<CR>
-nnoremap <silent><S-h> :tabprevious<CR>
-nnoremap <silent><S-l> :tabnext<CR>
+nnoremap <silent>[t :tabprevious<CR>
+nnoremap <silent>]t :tabnext<CR>
 nnoremap <Leader>1 1gt
 nnoremap <Leader>2 2gt
 nnoremap <Leader>3 3gt
@@ -233,6 +253,10 @@ nnoremap <C-down> <C-w>-
 nnoremap <C-left> <C-w>>
 nnoremap <C-right> <C-w><
 " }
+
+" Jump to start and end of line using the home row keys
+noremap H ^
+noremap L $
 
 nnoremap <silent><F2> :NERDTreeTabsToggle<CR>
 
