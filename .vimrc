@@ -60,6 +60,9 @@ Plug 'scrooloose/nerdcommenter'
 
 call plug#end()
 
+" 支持molokai
+set t_Co=256
+
 " 用于快速进入命令行
 nnoremap ; :
 
