@@ -58,6 +58,8 @@ Plug 'Raimondi/delimitMate'
 " 快速注释
 Plug 'scrooloose/nerdcommenter'
 
+set encoding=utf-8
+
 call plug#end()
 
 " 支持molokai
@@ -98,13 +100,8 @@ set autoindent
 set smarttab
 
 set tabstop=8
-autocmd FileType javascript set tabstop=2
 
 set softtabstop=8
-autocmd FileType javascript set softtabstop=2
-autocmd FileType javascript,html,css,xml set sw=2
-autocmd FileType javascript,html,css,xml set ts=2
-autocmd FileType javascript,html,css,xml set sts=2
 set noexpandtab
 
 " PHP file check
@@ -168,7 +165,7 @@ nnoremap <silent><Leader>e :call ToggleErrors()<CR>
 
 " vim-autoformat {
 " Execute Autoformat onsave
-autocmd FileType c,go,java,javascript,json,python,lua,php,markdown,sh,vim autocmd BufWrite <buffer> :Autoformat
+autocmd FileType c,go,java,json,python,lua,php,markdown,sh,vim autocmd BufWrite <buffer> :Autoformat
 " Enable autoindent
 let g:autoformat_autoindent = 1
 
