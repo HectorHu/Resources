@@ -58,6 +58,9 @@ Plug 'Raimondi/delimitMate'
 " 快速注释
 Plug 'scrooloose/nerdcommenter'
 
+" 快速运行
+Plug 'thinca/vim-quickrun', {'on': ['QuickRun', '<Plug>(quickrun)']}
+
 set encoding=utf-8
 
 call plug#end()
@@ -259,6 +262,7 @@ noremap H ^
 noremap L $
 
 nnoremap <silent><F2> :NERDTreeTabsToggle<CR>
+nnoremap <silent><F9> :QuickRun<CR>
 
 function! Strip(input_string)
 	return substitute(a:input_string, '^\s*\(.\{-}\)\s*$', '\1', '')
@@ -340,3 +344,15 @@ let g:ctrlp_extensions = ['funky']
 " nerdcommenter
 " 注释的时候自动加个空格
 let g:NERDSpceDelims=1
+
+" vim-quickrun {
+let g:quickrun_no_default_key_mappings = 1
+
+map <Leader>ru <Plug>(quickrun)
+
+augroup QuickRunRemap
+	autocmd!
+
+	autocmd FileType quickrun nnoremap <buffer><silent>q :call Quit()<CR>
+augroup END
+" }
