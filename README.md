@@ -2,7 +2,7 @@
 
 效果预览：
 
-
+![demo.png](https://github.com/hoohack/h-vim/blob/master/demo.png)
 
 ## NERDTree
 快捷键：
