@@ -4,6 +4,17 @@
 
 ![demo.png](https://github.com/hoohack/h-vim/blob/master/demo.png)
 
+## 通用
+普通模式，退出vim q
+
+普通模式，写需要sudo权限的文件，`:W`
+
+普通模式，冒号 `:`(不需要按shift)
+
+普通模式到行首 `shift + h`
+
+普通模式到行尾 `shift + l`
+
 ## NERDTree
 快捷键：
 
