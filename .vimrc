@@ -21,7 +21,7 @@ call plug#begin($HOME . '/.vim/bundle')
 Plug 'tomasr/molokai'
 
 " 代码补全工具
-Plug 'Valloric/YouCompleteMe'
+Plug 'Valloric/YouCompleteMe', {'do': 'python install.py --clang-completer --gocode-completer'}
 
 " 插件管理
 Plug 'gmarik/Vundle.vim'
@@ -60,6 +60,15 @@ Plug 'scrooloose/nerdcommenter'
 
 " 快速运行
 Plug 'thinca/vim-quickrun', {'on': ['QuickRun', '<Plug>(quickrun)']}
+
+" 状态栏
+Plug 'itchyny/lightline.vim'
+
+" 括号配对
+Plug 'kien/rainbow_parentheses.vim'
+
+" git diff 插件
+Plug 'airblade/vim-gitgutter'
 
 set encoding=utf-8
 
@@ -356,3 +365,230 @@ augroup QuickRunRemap
 	autocmd FileType quickrun nnoremap <buffer><silent>q :call Quit()<CR>
 augroup END
 " }
+
+" lightline.vim {
+let g:lightline = {
+			\ 'colorscheme': 'powerline',
+			\ 'active': {
+			\   'left': [ [ 'mode', 'paste' ], [ 'gitgutter', 'fugitive', 'filename' ] ],
+			\   'right': [ [ 'ale', 'lineinfo' ], ['percent'], [ 'filetype', 'fileencoding', 'fileformat' ] ]
+			\ },
+			\ 'inactive': {
+			\   'left': [ [ 'mode', 'filename' ] ],
+			\   'right': []
+			\ },
+			\ 'component_function': {
+			\   'gitgutter': 'LightLineGitGutter',
+			\   'fugitive': 'LightLineFugitive',
+			\   'filename': 'LightLineFilename',
+			\   'fileformat': 'LightLineFileformat',
+			\   'filetype': 'LightLineFiletype',
+			\   'fileencoding': 'LightLineFileencoding',
+			\   'percent': 'LightLinePercent',
+			\   'lineinfo': 'LightLineLineInfo',
+			\   'mode': 'LightLineMode',
+			\ },
+			\ 'component_expand': {
+			\   'tabs': 'lightline#tabs',
+			\   'ale': 'ALEGetStatusLine',
+			\ },
+			\ 'component_type': {
+			\   'ale': 'error',
+			\ },
+			\ 'separator': { 'left': "\ue0b0", 'right': "\ue0b2" },
+			\ 'subseparator': { 'left': "\ue0b1", 'right': "\ue0b3" },
+			\ 'tab': {
+			\   'active': [ 'filename', 'modified' ],
+			\   'inactive': [ 'filename', 'modified' ],
+			\ },
+			\ 'tabline': {
+			\   'left': [ [ 'tabs' ] ],
+			\   'right': []
+			\ },
+			\ 'tabline_separator': { 'left': "\ue0b0", 'right': "\ue0b2" },
+			\ 'tabline_subseparator': { 'left': "\ue0b1", 'right': "\ue0b3" },
+			\ }
+
+function! LightLineModified()
+	return &filetype =~# 'help' ? '' : &modified ? '+' : &modifiable ? '' : '-'
+endfunction
+
+function! LightLineReadonly()
+	return &filetype !~? 'help' && &readonly ? "\ue0a2" : ''
+endfunction
+
+function! LightLineFilename()
+	if GetWindowType() != 0
+		return ''
+	endif
+
+	let l:fname = expand('%:t')
+	return ('' !=# LightLineReadonly() ? LightLineReadonly() . ' ' : '') .
+				\ ('' !=# l:fname ? l:fname : '[No Name]') .
+				\ ('' !=# LightLineModified() ? ' ' . LightLineModified() : '')
+endfunction
+
+function! GetBufferListOutputAsOneString()
+	let l:buffer_list = ''
+	redir =>> l:buffer_list
+	ls
+	redir END
+	return l:buffer_list
+endfunction
+
+function! IsLocationListBuffer()
+	if &filetype !=# 'qf'
+		return 0
+	endif
+
+	silent let l:buffer_list = GetBufferListOutputAsOneString()
+
+	let l:quickfix_match = matchlist(l:buffer_list,
+				\ '\n\s*\(\d\+\)[^\n]*Quickfix')
+	if empty(l:quickfix_match)
+		return 1
+	endif
+	let l:quickfix_bufnr = l:quickfix_match[1]
+	return l:quickfix_bufnr == bufnr('%') ? 0 : 1
+endfunction
+
+function! GetWindowType()
+	if &previewwindow
+		return 3
+	endif
+
+	if &filetype is# 'qf'
+		if !IsLocationListBuffer()
+			return 2
+		endif
+
+		return 1
+	endif
+
+	return 0
+endfunction
+
+function! IsGitFile()
+	if !exists('g:loaded_gitgutter') || !exists('g:loaded_fugitive')
+		return 0
+	endif
+
+	let l:fname = expand('%:t')
+	let l:plugins = ['\[Plugins\]']
+
+	if l:fname ==# ''
+		return 0
+	endif
+
+	for l:plugin in l:plugins
+		if l:fname =~# l:plugin
+			return 0
+		endif
+	endfor
+
+	let l:git_dir = fugitive#extract_git_dir(resolve(expand('%')))
+	if l:git_dir ==# ''
+		return 0
+	endif
+
+	return 1
+endfunction
+
+function! LightLineGitGutter()
+	if GetWindowType() != 0
+		return ''
+	endif
+
+	if !IsGitFile()
+		return ''
+	endif
+
+	let l:summary = GitGutterGetHunkSummary()
+	return printf('+%d ~%d -%d', l:summary[0], l:summary[1], l:summary[2])
+endfunction
+
+function! LightLineFugitive()
+	if GetWindowType() != 0
+		return ''
+	endif
+
+	if !IsGitFile()
+		return ''
+	endif
+
+	try
+		if getftype(expand('%')) ==# 'link'
+			call fugitive#detect(resolve(expand('%')))
+		endif
+		let l:mark = "\ue0a0 "
+		let l:branch = fugitive#head()
+		return l:branch !=# '' ? l:mark.branch : ''
+	catch
+	endtry
+	return ''
+endfunction
+
+function! LightLineFileformat()
+	return winwidth(0) > 70 ? &fileformat : ''
+endfunction
+
+function! LightLineFiletype()
+	return winwidth(0) > 70 ? (&filetype !=# '' ? &filetype : 'unknown') : ''
+endfunction
+
+function! LightLineFileencoding()
+	return winwidth(0) > 70 ? (&fileencoding !=# '' ? &fileencoding : &encoding) : ''
+endfunction
+
+function! LightLinePercent()
+	return winwidth(0) > 70 ? printf('%3d%%', (100 * line('.') / line('$'))) : ''
+endfunction
+
+function! LightLineLineInfo()
+	return winwidth(0) > 70 ? printf('%3d/%-d :%-2d', line('.'), line('$'), col('.')) : ''
+endfunction
+
+function! LightLineMode()
+	let l:fname = expand('%:t')
+	let l:window_type = GetWindowType()
+	if l:window_type != 0
+		return l:window_type == 3 ? 'Preview' :
+					\ l:window_type == 2 ? 'Quickfix' :
+					\ l:window_type == 1 ? 'Location' : ''
+	endif
+
+	return winwidth(0) > 60 ? lightline#mode() : ''
+endfunction
+
+augroup AfterALELint
+	autocmd!
+	autocmd User ALELint call lightline#update()
+augroup END
+" }
+
+let g:rbpt_colorpairs = [
+			\ ['brown',       'RoyalBlue3'],
+			\ ['Darkblue',    'SeaGreen3'],
+			\ ['darkgray',    'DarkOrchid3'],
+			\ ['darkgreen',   'firebrick3'],
+			\ ['darkcyan',    'RoyalBlue3'],
+			\ ['darkred',     'SeaGreen3'],
+			\ ['darkmagenta', 'DarkOrchid3'],
+			\ ['brown',       'firebrick3'],
+			\ ['gray',        'RoyalBlue3'],
+			\ ['black',       'SeaGreen3'],
+			\ ['darkmagenta', 'DarkOrchid3'],
+			\ ['Darkblue',    'firebrick3'],
+			\ ['darkgreen',   'RoyalBlue3'],
+			\ ['darkcyan',    'SeaGreen3'],
+			\ ['darkred',     'DarkOrchid3'],
+			\ ['red',         'firebrick3'],
+			\ ]
+
+let g:rbpt_max = 16
+let g:rbpt_loadcmd_toggle = 0
+
+au VimEnter * RainbowParenthesesToggle
+au Syntax * RainbowParenthesesLoadRound
+au Syntax * RainbowParenthesesLoadSquare
+au Syntax * RainbowParenthesesLoadBraces
